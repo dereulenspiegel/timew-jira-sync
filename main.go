@@ -1,0 +1,106 @@
+package main
+
+import (
+	"fmt"
+	"log"
+	"os"
+	"os/exec"
+	"strings"
+
+	"gopkg.in/ini.v1"
+)
+
+var debug = false
+
+var loggedTag = "logged"
+
+func main() {
+	cfg, err := ini.Load("/Users/till.klocke/.timewarrior/extensions/config.ini")
+	if err != nil {
+		log.Fatal("failed to read config file: %w", err)
+	}
+	jiraSection := cfg.Section("jira")
+
+	wlAppender, err := NewDumpWorklogAppender(jiraSection.Key("base_url").String(),
+		jiraSection.Key("username").String(), jiraSection.Key("token").String())
+
+	if err != nil {
+		log.Fatal("failed to create worklog appender: %w", err)
+	}
+
+	config, intervals, err := ParseTimewarrior(os.Stdin)
+	if err != nil {
+		log.Fatal("failed to parse timewarrior input: %w", err)
+	}
+
+	for _, conf := range config {
+		switch conf.Name {
+		case "debug":
+			if conf.Value == "on" {
+				debug = true
+			}
+		}
+	}
+
+	wlAppender.debug = debug
+	for _, interval := range intervals {
+		issue := ""
+		isLogged := false
+		comment := ""
+		debuglog("inspecting interval %d with tags %s", interval.Id, interval.Tags)
+		for _, tag := range interval.Tags {
+			prefix, value, found := strings.Cut(tag, ":")
+			switch prefix {
+			case "iss":
+				if found {
+					issue = strings.TrimSpace(value)
+				} else {
+					errorLog("interval %d has invalid issue tag %s", interval.Id, tag)
+				}
+
+			case loggedTag:
+				isLogged = true
+
+			case "comment":
+				comment = value
+			}
+		}
+
+		if issue != "" && !isLogged {
+
+			delta := int64(interval.End.Time().Sub(interval.Start.Time()).Minutes())
+			debuglog("Sending interval %d to issue %s with %d minutes", interval.Id, issue, delta)
+			wl := Worklog{
+				Started:   JiraDate(interval.Start.Time()),
+				TimeSpent: fmt.Sprintf("%dm", delta),
+				Comment:   comment,
+			}
+			if err := wlAppender.Append(issue, wl); err != nil {
+				errorLog("failed to send worklog for interval %d to issue %s: %w", interval.Id, issue, err)
+			} else {
+				tagInterval(interval.Id, loggedTag)
+			}
+		} else {
+			debuglog("not sending interval %d", interval.Id)
+		}
+	}
+}
+
+func tagInterval(id uint64, tag string) {
+	cmd := exec.Command("timew", "tag", fmt.Sprintf("@%d", id), tag)
+	cmd.Env = os.Environ()
+	out, err := cmd.CombinedOutput()
+	if err != nil {
+		errorLog("failed to tag interval (%w): %s", err, out)
+	}
+}
+
+func errorLog(format string, vals ...any) {
+	fmt.Printf("[ERROR] "+format+"\n", vals...)
+}
+
+func debuglog(format string, vals ...any) {
+	if debug {
+		fmt.Printf("[DEBUG] "+format+"\n", vals...)
+	}
+}
