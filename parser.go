@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"strings"
 	"time"
 )
@@ -39,7 +38,7 @@ type TimewarriorInterval struct {
 
 func ParseTimewarrior(in io.Reader) (config []TimewarriorConfig, intervals []TimewarriorInterval, err error) {
 
-	inBuf, err := ioutil.ReadAll(in)
+	inBuf, err := io.ReadAll(in)
 	if err != nil {
 		return nil, nil, fmt.Errorf("failed to read input: %w", err)
 	}

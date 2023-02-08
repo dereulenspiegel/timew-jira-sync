@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"time"
 )
@@ -43,7 +43,6 @@ func (d *DumbWorklogAppender) Append(ticketId string, wlog Worklog) error {
 	if err := json.NewEncoder(&buf).Encode(wlog); err != nil {
 		return err
 	}
-	fmt.Printf("JSON to send:\n%s", string(buf.Bytes()))
 	req, err := http.NewRequest(http.MethodPost, worklogUrl, &buf)
 	if err != nil {
 		return err
@@ -56,7 +55,7 @@ func (d *DumbWorklogAppender) Append(ticketId string, wlog Worklog) error {
 	}
 	defer resp.Body.Close()
 	if resp.StatusCode != http.StatusCreated {
-		errBody, err := ioutil.ReadAll(resp.Body)
+		errBody, err := io.ReadAll(resp.Body)
 		if err != nil {
 			panic(err)
 		}
