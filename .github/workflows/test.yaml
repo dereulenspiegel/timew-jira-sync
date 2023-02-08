@@ -1,0 +1,30 @@
+name: Tests
+on: 
+  push: 
+    branches: ["*"]
+  pull_request: 
+    branches: ["*"]
+
+jobs:
+  run-tests:
+    strategy:
+      matrix:
+        go_version: ["1.19", "1.18"]
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+    - name: Setup Go
+      uses: actions/setup-go@v3
+      with:
+        go-version: "${{ matrix.go_version }}"
+    - name: Install dependencies
+      run: |
+        echo $USER
+        pwd
+        go version
+        go mod download
+    - name: Run vet & lint
+      run: |
+        go vet ./...
+    - name: Run testing
+      run: go test -v ./...
