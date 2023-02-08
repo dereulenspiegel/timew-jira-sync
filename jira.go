@@ -17,13 +17,6 @@ type DumbWorklogAppender struct {
 	debug bool
 }
 
-/*
-'started': start_date.strftime('%Y-%m-%dT%H:%M:%S.000%Z'),
-
-	'timeSpent': str(round(delta.seconds / 60)) + 'm',
-	'comment': description
-*/
-
 type JiraDate time.Time
 
 func (j JiraDate) MarshalJSON() ([]byte, error) {
