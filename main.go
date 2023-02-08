@@ -5,6 +5,7 @@ import (
 	"log"
 	"os"
 	"os/exec"
+	"path"
 	"strings"
 
 	"gopkg.in/ini.v1"
@@ -15,7 +16,13 @@ var debug = false
 var loggedTag = "logged"
 
 func main() {
-	cfg, err := ini.Load("/Users/till.klocke/.timewarrior/extensions/config.ini")
+	homeDir, err := os.UserHomeDir()
+	if err != nil {
+		log.Fatal("failed to obtain users homedir: %w", err)
+	}
+
+	configDirPath := path.Join(homeDir, ".timewarrior", "extensions", "config.ini")
+	cfg, err := ini.Load(configDirPath)
 	if err != nil {
 		log.Fatal("failed to read config file: %w", err)
 	}
