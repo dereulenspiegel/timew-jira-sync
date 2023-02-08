@@ -1,0 +1,23 @@
+name: Release
+on: 
+  push: 
+    tags: ["v*"]
+
+permissions:
+   contents: write # needed to write releases
+   # id-token: write # needed for keyless signing, but let's do this later
+
+jobs:
+  test:
+    uses: .github/workflows/test.yaml
+  release:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: anchore/sbom-action/download-syft@v0.13.3 # installs syft
+    - uses: goreleaser/goreleaser-action@v4
+      with:
+        distribution: goreleaser
+        version: latest
+        args: release --rm-dist
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
