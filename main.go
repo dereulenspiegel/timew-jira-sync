@@ -4,10 +4,10 @@ import (
 	"fmt"
 	"log"
 	"os"
-	"os/exec"
 	"path"
 	"strings"
 
+	"github.com/dereulenspiegel/timew-jira-sync/timewarrior"
 	"gopkg.in/ini.v1"
 )
 
@@ -35,7 +35,7 @@ func main() {
 		log.Fatal("failed to create worklog appender: %w", err)
 	}
 
-	config, intervals, err := ParseTimewarrior(os.Stdin)
+	config, intervals, err := timewarrior.Parse(os.Stdin)
 	if err != nil {
 		log.Fatal("failed to parse timewarrior input: %w", err)
 	}
@@ -85,20 +85,11 @@ func main() {
 			if err := wlAppender.Append(issue, wl); err != nil {
 				errorLog("failed to send worklog for interval %d to issue %s: %w", interval.Id, issue, err)
 			} else {
-				tagInterval(interval.Id, loggedTag)
+				timewarrior.Cli.Tag(interval.Id, loggedTag)
 			}
 		} else {
 			debuglog("not sending interval %d", interval.Id)
 		}
-	}
-}
-
-func tagInterval(id uint64, tag string) {
-	cmd := exec.Command("timew", "tag", fmt.Sprintf("@%d", id), tag)
-	cmd.Env = os.Environ()
-	out, err := cmd.CombinedOutput()
-	if err != nil {
-		errorLog("failed to tag interval (%w): %s", err, out)
 	}
 }
 

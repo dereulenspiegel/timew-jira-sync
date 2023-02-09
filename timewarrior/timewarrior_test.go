@@ -1,4 +1,4 @@
-package main
+package timewarrior
 
 import (
 	"strings"
@@ -18,7 +18,7 @@ temp.version: 0.1.0
 
 [{"start":"20160405T162205Z","end":"20160405T162211Z","tags":["This is a multi-word tag","ProjectA","tag123"]}]`
 
-	config, intervals, err := ParseTimewarrior(strings.NewReader(testInput))
+	config, intervals, err := Parse(strings.NewReader(testInput))
 	require.NoError(t, err)
 	require.Len(t, config, 5)
 	require.Len(t, intervals, 1)
