@@ -1,4 +1,4 @@
-package main
+package timewarrior
 
 import (
 	"bufio"
@@ -9,34 +9,34 @@ import (
 	"time"
 )
 
-type TimewarriorConfig struct {
+type Config struct {
 	Name  string
 	Value string
 }
 
-type TimewarriorTime time.Time
+type Time time.Time
 
 const timewarriorLayout = "20060102T150405Z"
 
-func (t *TimewarriorTime) UnmarshalJSON(b []byte) (err error) {
+func (t *Time) UnmarshalJSON(b []byte) (err error) {
 	s := strings.Trim(string(b), `"`)
 	nt, err := time.Parse(timewarriorLayout, s)
-	*t = TimewarriorTime(nt)
+	*t = Time(nt)
 	return
 }
 
-func (t TimewarriorTime) Time() time.Time {
+func (t Time) Time() time.Time {
 	return time.Time(t)
 }
 
-type TimewarriorInterval struct {
-	Id    uint64          `json:"id"`
-	Start TimewarriorTime `json:"start"`
-	End   TimewarriorTime `json:"end"`
-	Tags  []string        `json:"tags"`
+type Interval struct {
+	Id    uint64   `json:"id"`
+	Start Time     `json:"start"`
+	End   Time     `json:"end"`
+	Tags  []string `json:"tags"`
 }
 
-func ParseTimewarrior(in io.Reader) (config []TimewarriorConfig, intervals []TimewarriorInterval, err error) {
+func Parse(in io.Reader) (config []Config, intervals []Interval, err error) {
 
 	inBuf, err := io.ReadAll(in)
 	if err != nil {
@@ -61,7 +61,7 @@ func ParseTimewarrior(in io.Reader) (config []TimewarriorConfig, intervals []Tim
 		}
 		name := strings.TrimSpace(parts[0])
 		value := strings.TrimSpace(parts[1])
-		config = append(config, TimewarriorConfig{
+		config = append(config, Config{
 			Name:  name,
 			Value: value,
 		})
@@ -71,7 +71,7 @@ func ParseTimewarrior(in io.Reader) (config []TimewarriorConfig, intervals []Tim
 	}
 
 	// Reader should now be advanced to the JSON encoded intervals
-	intervals = []TimewarriorInterval{}
+	intervals = []Interval{}
 	if err := json.Unmarshal([]byte(inParts[1]), &intervals); err != nil {
 		return nil, nil, fmt.Errorf("failed to decode intervals: %w", err)
 	}

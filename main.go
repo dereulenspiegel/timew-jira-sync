@@ -8,6 +8,7 @@ import (
 	"path"
 	"strings"
 
+	"github.com/dereulenspiegel/timew-jira-sync/timewarrior"
 	"gopkg.in/ini.v1"
 )
 
@@ -35,7 +36,7 @@ func main() {
 		log.Fatal("failed to create worklog appender: %w", err)
 	}
 
-	config, intervals, err := ParseTimewarrior(os.Stdin)
+	config, intervals, err := timewarrior.Parse(os.Stdin)
 	if err != nil {
 		log.Fatal("failed to parse timewarrior input: %w", err)
 	}
