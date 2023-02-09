@@ -9,11 +9,13 @@ import (
 	"time"
 )
 
+// Config holds timewarrior configuration statements given at the beginning of the Std in stream
 type Config struct {
 	Name  string
 	Value string
 }
 
+// Time represents time stamps as formatted by timewarrior
 type Time time.Time
 
 const timewarriorLayout = "20060102T150405Z"
@@ -29,6 +31,7 @@ func (t Time) Time() time.Time {
 	return time.Time(t)
 }
 
+// Interval represents timewarrior intervals as created with start and stop
 type Interval struct {
 	Id    uint64   `json:"id"`
 	Start Time     `json:"start"`
@@ -36,6 +39,7 @@ type Interval struct {
 	Tags  []string `json:"tags"`
 }
 
+// Parse parses a data stream like std in from timewarrior and returns the received configuration and intervals
 func Parse(in io.Reader) (config []Config, intervals []Interval, err error) {
 
 	inBuf, err := io.ReadAll(in)
