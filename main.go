@@ -73,7 +73,7 @@ func main() {
 			}
 		}
 
-		if issue != "" && !isLogged {
+		if issue != "" && !isLogged && !interval.End.Time().IsZero() {
 
 			delta := int64(interval.End.Time().Sub(interval.Start.Time()).Minutes())
 			debuglog("Sending interval %d to issue %s with %d minutes", interval.Id, issue, delta)
